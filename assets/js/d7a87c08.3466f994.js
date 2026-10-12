@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[365],{4410:e=>{e.exports=JSON.parse('{"sourceUrl":"https://github.com/gigahd/Splynx/blob/master","baseUrl":"/Splynx/","classOrder":["Splynx","LinearSpline","CubicSpline","SampledSpline"],"apiCategories":[]}')}}]);

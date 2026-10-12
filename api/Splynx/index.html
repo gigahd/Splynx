@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-moonwave plugin-id-moonwave" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.1">
+<title data-rh="true">Splynx</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://gigahd.github.io/Splynx/api/Splynx"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="Splynx"><meta data-rh="true" name="description" content="Splines built for fast lookups. There are three kinds:
+
+| Kind | Made by | Shape | Editable |
+| --- | --- | --- | --- |
+| [LinearSpline] | [Splynx.linear] | Straight segments between the points | Yes |
+| [CubicSpline] | [Splynx.bezier], [Splynx.hermite], [Splynx.cardinal], [Splynx.catmullRom], [Splynx.bSpline] | Smooth curves | Yes |
+| [SampledSpline] | [Splynx.sampled] | Straight segments a fixed distance apart along another spline | No |
+
+Lookups are prioritised over edits: everything that speeds up a lookup is precomputed, and rebuilt when the
+spline changes. Run `lune run bench` for current numbers.
+
+### Points and the pivot
+
+Points are relative to the spline&#x27;s pivot, and every position a spline returns has the pivot applied. Moving
+the pivot moves the whole spline without rebuilding anything.
+
+### Alpha and distance
+
+`getPos(alpha)` splits alpha evenly across a spline&#x27;s curves, so it speeds up and slows down along curves of
+different lengths. For a constant speed, work in distances: `getPosAtDistance`, `getUniformPos` and
+`sampleUniform`.
+
+### Hints
+
+Distance lookups take an optional hint and return a new one. Passing back the previous call&#x27;s hint starts the
+next lookup where the last one ended, which makes lookups for something moving along the spline cheaper. Any
+hint gives the same result, so a stale one is fine; leave it out for lookups that jump around.
+
+```lua
+local spline = Splynx.catmullRom({ Vector3.new(0, 0, 0), Vector3.new(10, 5, 0), Vector3.new(20, 0, 0) })
+
+local distance, hint = 0, nil
+RunService.Heartbeat:Connect(function(deltaTime)
+    distance = (distance + 12 * deltaTime) % spline:getLength()
+    local position
+    position, hint = spline:getPosAtDistance(distance, hint)
+    part.Position = position
+end)
+```
+
+### Vectors
+
+Inputs accept `Vector3` or `vector`, and outputs are `vector`. On Roblox the two are the same value, but the
+type checker treats them as different types, so outputs may need a cast where a `Vector3` is expected."><meta data-rh="true" property="og:description" content="Splines built for fast lookups. There are three kinds:
+
+| Kind | Made by | Shape | Editable |
+| --- | --- | --- | --- |
+| [LinearSpline] | [Splynx.linear] | Straight segments between the points | Yes |
+| [CubicSpline] | [Splynx.bezier], [Splynx.hermite], [Splynx.cardinal], [Splynx.catmullRom], [Splynx.bSpline] | Smooth curves | Yes |
+| [SampledSpline] | [Splynx.sampled] | Straight segments a fixed distance apart along another spline | No |
+
+Lookups are prioritised over edits: everything that speeds up a lookup is precomputed, and rebuilt when the
+spline changes. Run `lune run bench` for current numbers.
+
+### Points and the pivot
+
+Points are relative to the spline&#x27;s pivot, and every position a spline returns has the pivot applied. Moving
+the pivot moves the whole spline without rebuilding anything.
+
+### Alpha and distance
+
+`getPos(alpha)` splits alpha evenly across a spline&#x27;s curves, so it speeds up and slows down along curves of
+different lengths. For a constant speed, work in distances: `getPosAtDistance`, `getUniformPos` and
+`sampleUniform`.
+
+### Hints
+
+Distance lookups take an optional hint and return a new one. Passing back the previous call&#x27;s hint starts the
+next lookup where the last one ended, which makes lookups for something moving along the spline cheaper. Any
+hint gives the same result, so a stale one is fine; leave it out for lookups that jump around.
+
+```lua
+local spline = Splynx.catmullRom({ Vector3.new(0, 0, 0), Vector3.new(10, 5, 0), Vector3.new(20, 0, 0) })
+
+local distance, hint = 0, nil
+RunService.Heartbeat:Connect(function(deltaTime)
+    distance = (distance + 12 * deltaTime) % spline:getLength()
+    local position
+    position, hint = spline:getPosAtDistance(distance, hint)
+    part.Position = position
+end)
+```
+
+### Vectors
+
+Inputs accept `Vector3` or `vector`, and outputs are `vector`. On Roblox the two are the same value, but the
+type checker treats them as different types, so outputs may need a cast where a `Vector3` is expected."><link data-rh="true" rel="canonical" href="https://gigahd.github.io/Splynx/api/Splynx"><link data-rh="true" rel="alternate" href="https://gigahd.github.io/Splynx/api/Splynx" hreflang="en"><link data-rh="true" rel="alternate" href="https://gigahd.github.io/Splynx/api/Splynx" hreflang="x-default"><link rel="stylesheet" href="/Splynx/assets/css/styles.e8e96400.css">
+<script src="/Splynx/assets/js/runtime~main.ff417e75.js" defer="defer"></script>
+<script src="/Splynx/assets/js/main.811f6696.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/Splynx/"><b class="navbar__title text--truncate">Splynx</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/Splynx/api/">API</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/gigahd/Splynx" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input id="search_input_react" type="search" placeholder="Loading..." aria-label="Search" class="navbar__search-input search-bar" disabled=""></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0 docPageContainer_wNNk"><div class="docPage_Dpn1"><div class="docSidebarContainer_o_re"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/Splynx/api/Splynx"><span title="​Splynx" class="linkLabel_WmDU">​Splynx</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Splynx/api/LinearSpline"><span title="​Linear​Spline" class="linkLabel_WmDU">​Linear​Spline</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Splynx/api/CubicSpline"><span title="​Cubic​Spline" class="linkLabel_WmDU">​Cubic​Spline</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Splynx/api/SampledSpline"><span title="​Sampled​Spline" class="linkLabel_WmDU">​Sampled​Spline</span></a></li></ul></nav></div></div><main class="docMainContainer_HJE1"><div class="container padding-vert--lg"><div class="row"><div class="col docItemCol_MU3C"><div class="docItemContainer_Wv98"><article><div class="member_J0w1 markdown"><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_oUs_"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><header><h1 class="docTitle_mZRt" style="text-decoration:none"><span style="display:inline-block">Splynx</span></h1><div class="luaClassTags_EipM"></div><div>
+<p>Splines built for fast lookups. There are three kinds:</p>
+<table>
+  <thead>
+    <tr>
+      <th>Kind</th>
+      <th>Made by</th>
+      <th>Shape</th>
+      <th>Editable</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="/Splynx/api/LinearSpline">LinearSpline</a></td>
+      <td><a href="/Splynx/api/Splynx#linear">Splynx.linear</a></td>
+      <td>Straight segments between the points</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><a href="/Splynx/api/CubicSpline">CubicSpline</a></td>
+      <td><a href="/Splynx/api/Splynx#bezier">Splynx.bezier</a>, <a href="/Splynx/api/Splynx#hermite">Splynx.hermite</a>, <a href="/Splynx/api/Splynx#cardinal">Splynx.cardinal</a>, <a href="/Splynx/api/Splynx#catmullRom">Splynx.catmullRom</a>, <a href="/Splynx/api/Splynx#bSpline">Splynx.bSpline</a></td>
+      <td>Smooth curves</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td><a href="/Splynx/api/SampledSpline">SampledSpline</a></td>
+      <td><a href="/Splynx/api/Splynx#sampled">Splynx.sampled</a></td>
+      <td>Straight segments a fixed distance apart along another spline</td>
+      <td>No</td>
+    </tr>
+  </tbody>
+</table>
+<p>
+  Lookups are prioritised over edits: everything that speeds up a lookup is precomputed, and rebuilt when the
+  spline changes. Run <code>lune run bench</code> for current numbers.
+</p>
+<h3>Points and the pivot</h3>
+<p>
+  Points are relative to the spline's pivot, and every position a spline returns has the pivot applied. Moving
+  the pivot moves the whole spline without rebuilding anything.
+</p>
+<h3>Alpha and distance</h3>
+<p>
+  <code>getPos(alpha)</code> splits alpha evenly across a spline's curves, so it speeds up and slows down along curves of
+  different lengths. For a constant speed, work in distances: <code>getPosAtDistance</code>, <code>getUniformPos</code> and
+  <code>sampleUniform</code>.
+</p>
+<h3>Hints</h3>
+<p>
+  Distance lookups take an optional hint and return a new one. Passing back the previous call's hint starts the
+  next lookup where the last one ended, which makes lookups for something moving along the spline cheaper. Any
+  hint gives the same result, so a stale one is fine; leave it out for lookups that jump around.
+</p>
+<pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> spline <span class="token operator">=</span> Splynx<span class="token punctuation">.</span><span class="token function">catmullRom</span><span class="token punctuation">(</span><span class="token punctuation">{</span> Vector3<span class="token punctuation">.</span><span class="token function">new</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">,</span> Vector3<span class="token punctuation">.</span><span class="token function">new</span><span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">,</span> <span class="token number">5</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">,</span> Vector3<span class="token punctuation">.</span><span class="token function">new</span><span class="token punctuation">(</span><span class="token number">20</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+<span class="token keyword">local</span> distance<span class="token punctuation">,</span> hint <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token keyword">nil</span>
+RunService<span class="token punctuation">.</span>Heartbeat<span class="token punctuation">:</span><span class="token function">Connect</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span>deltaTime<span class="token punctuation">)</span>
+    distance <span class="token operator">=</span> <span class="token punctuation">(</span>distance <span class="token operator">+</span> <span class="token number">12</span> <span class="token operator">*</span> deltaTime<span class="token punctuation">)</span> <span class="token operator">%</span> spline<span class="token punctuation">:</span><span class="token function">getLength</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">local</span> position
+    position<span class="token punctuation">,</span> hint <span class="token operator">=</span> spline<span class="token punctuation">:</span><span class="token function">getPosAtDistance</span><span class="token punctuation">(</span>distance<span class="token punctuation">,</span> hint<span class="token punctuation">)</span>
+    part<span class="token punctuation">.</span>Position <span class="token operator">=</span> position
+<span class="token keyword">end</span><span class="token punctuation">)</span>
+</code></pre>
+<h3>Vectors</h3>
+<p>
+  Inputs accept <code>Vector3</code> or <code>vector</code>, and outputs are <code>vector</code>. On Roblox the two are the same value, but the
+  type checker treats them as different types, so outputs may need a cast where a <code>Vector3</code> is expected.
+</p>
+</div></header><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="types">Types<a href="#types" class="hash-link" aria-label="Direct link to Types" title="Direct link to Types" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="VectorLike"><code style="text-decoration:none">VectorLike</code><a href="#VectorLike" class="hash-link" aria-label="Direct link to VectorLike" title="Direct link to VectorLike" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L68"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>VectorLike<!-- --> = </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/Vector3" target="_blank" rel="noopener noreferrer">Vector3<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code class="op_lSLc"> | </code><code class="blue_P4bS">vector</code></div><div>
+<p>Anything Splynx accepts as a position or velocity.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Spline"><code style="text-decoration:none">Spline</code><a href="#Spline" class="hash-link" aria-label="Direct link to Spline" title="Direct link to Spline" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L78"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>Spline<!-- --> = </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/LinearSpline">LinearSpline</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/SampledSpline">SampledSpline</a></code></div><div>
+<p>Any spline.</p>
+</div><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="linear"><code style="text-decoration:none">linear</code><a href="#linear" class="hash-link" aria-label="Direct link to linear" title="Direct link to linear" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L90"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">linear</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>Relative to the pivot.</p>
+</span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
+<p>Defaults to the origin.</p>
+</span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/LinearSpline">LinearSpline</a></code></div><div>
+<p>Straight segments between the points. Needs at least two points to make a segment.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="bezier"><code style="text-decoration:none">bezier</code><a href="#bezier" class="hash-link" aria-label="Direct link to bezier" title="Direct link to bezier" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L103"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">bezier</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>Relative to the pivot.</p>
+</span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
+<p>Defaults to the origin.</p>
+</span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code></div><div>
+<p>
+  Cubic Bezier curves: points 1-4 make the first curve, 4-7 the second, and so on, so it passes through every
+  third point. Points past the last complete curve are kept but ignored.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="hermite"><code style="text-decoration:none">hermite</code><a href="#hermite" class="hash-link" aria-label="Direct link to hermite" title="Direct link to hermite" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L117"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">hermite</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>Relative to the pivot.</p>
+</span></span></div><div><code>velocities<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>One per point. Missing ones are zero.</p>
+</span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
+<p>Defaults to the origin.</p>
+</span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code></div><div>
+<p>
+  Passes through every point, leaving each one with its velocity. Change velocities with
+  <a href="/Splynx/api/CubicSpline#setVelocity">CubicSpline:setVelocity</a>.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cardinal"><code style="text-decoration:none">cardinal</code><a href="#cardinal" class="hash-link" aria-label="Direct link to cardinal" title="Direct link to cardinal" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L131"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">cardinal</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>Relative to the pivot.</p>
+</span></span></div><div><code>scale<!-- -->: </code><code class="blue_P4bS">number</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>How strongly the curve follows its neighbours; 0.5 is Catmull-Rom.</p>
+</span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
+<p>Defaults to the origin.</p>
+</span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code></div><div>
+<p>
+  Passes through every point, with velocities of <code>(next - previous) * scale</code>. The end points mirror their only
+  neighbour. Change the scale with <a href="/Splynx/api/CubicSpline#setScale">CubicSpline:setScale</a>.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="catmullRom"><code style="text-decoration:none">catmullRom</code><a href="#catmullRom" class="hash-link" aria-label="Direct link to catmullRom" title="Direct link to catmullRom" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L143"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">catmullRom</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>Relative to the pivot.</p>
+</span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
+<p>Defaults to the origin.</p>
+</span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code></div><div>
+<p>A <a href="/Splynx/api/Splynx#cardinal">Splynx.cardinal</a> spline with a scale of 0.5: passes through every point with natural-looking curves.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="bSpline"><code style="text-decoration:none">bSpline</code><a href="#bSpline" class="hash-link" aria-label="Direct link to bSpline" title="Direct link to bSpline" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L156"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">bSpline</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>Relative to the pivot.</p>
+</span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
+<p>Defaults to the origin.</p>
+</span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code></div><div>
+<p>
+  A uniform cubic B-spline: smooth everywhere, including across joints, but it only passes near its points.
+  Needs at least four points.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="sampled"><code style="text-decoration:none">sampled</code><a href="#sampled" class="hash-link" aria-label="Direct link to sampled" title="Direct link to sampled" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L172"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">sampled</code><code>(</code><div class="inset_uKQm"><div><code>source<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/LinearSpline">LinearSpline</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>The spline to copy.</p>
+</span></span></div><div><code>spacing<!-- -->: </code><code class="blue_P4bS">number</code><span class="inlineDescription_G7Er">-- <span>
+<p>Studs between samples, along the spline.</p>
+</span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/SampledSpline">SampledSpline</a></code></div><div>
+<p>
+  A static copy of <code>source</code> as straight segments <code>spacing</code> studs apart along it, for the fastest distance
+  lookups. Smaller spacing follows curves more closely. It doesn't follow later edits to <code>source</code>; sample it
+  again after changing it.
+</p>
+</div><h3>Errors</h3><table class="errorTable_jfN8"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;Spacing must be more than 0&quot;</td><td>If `spacing` isn&#x27;t positive.</td></tr><tr><td>&quot;Spline doesn&#x27;t have enough points to make a curve&quot;</td><td>If `source` has no curves.</td></tr></tbody></table></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [
+        {
+            &quot;name&quot;: &quot;linear&quot;,
+            &quot;desc&quot;: &quot;Straight segments between the points. Needs at least two points to make a segment.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;points&quot;,
+                    &quot;desc&quot;: &quot;Relative to the pivot.&quot;,
+                    &quot;lua_type&quot;: &quot;{VectorLike}?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;pivot&quot;,
+                    &quot;desc&quot;: &quot;Defaults to the origin.&quot;,
+                    &quot;lua_type&quot;: &quot;VectorLike?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;LinearSpline&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 90,
+                &quot;path&quot;: &quot;src/init.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;bezier&quot;,
+            &quot;desc&quot;: &quot;Cubic Bezier curves: points 1-4 make the first curve, 4-7 the second, and so on, so it passes through every\nthird point. Points past the last complete curve are kept but ignored.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;points&quot;,
+                    &quot;desc&quot;: &quot;Relative to the pivot.&quot;,
+                    &quot;lua_type&quot;: &quot;{VectorLike}?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;pivot&quot;,
+                    &quot;desc&quot;: &quot;Defaults to the origin.&quot;,
+                    &quot;lua_type&quot;: &quot;VectorLike?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CubicSpline&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 103,
+                &quot;path&quot;: &quot;src/init.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;hermite&quot;,
+            &quot;desc&quot;: &quot;Passes through every point, leaving each one with its velocity. Change velocities with\n[CubicSpline:setVelocity].&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;points&quot;,
+                    &quot;desc&quot;: &quot;Relative to the pivot.&quot;,
+                    &quot;lua_type&quot;: &quot;{VectorLike}?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;velocities&quot;,
+                    &quot;desc&quot;: &quot;One per point. Missing ones are zero.&quot;,
+                    &quot;lua_type&quot;: &quot;{VectorLike}?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;pivot&quot;,
+                    &quot;desc&quot;: &quot;Defaults to the origin.&quot;,
+                    &quot;lua_type&quot;: &quot;VectorLike?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CubicSpline&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 117,
+                &quot;path&quot;: &quot;src/init.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;cardinal&quot;,
+            &quot;desc&quot;: &quot;Passes through every point, with velocities of `(next - previous) * scale`. The end points mirror their only\nneighbour. Change the scale with [CubicSpline:setScale].&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;points&quot;,
+                    &quot;desc&quot;: &quot;Relative to the pivot.&quot;,
+                    &quot;lua_type&quot;: &quot;{VectorLike}?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;scale&quot;,
+                    &quot;desc&quot;: &quot;How strongly the curve follows its neighbours; 0.5 is Catmull-Rom.&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;pivot&quot;,
+                    &quot;desc&quot;: &quot;Defaults to the origin.&quot;,
+                    &quot;lua_type&quot;: &quot;VectorLike?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CubicSpline&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 131,
+                &quot;path&quot;: &quot;src/init.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;catmullRom&quot;,
+            &quot;desc&quot;: &quot;A [Splynx.cardinal] spline with a scale of 0.5: passes through every point with natural-looking curves.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;points&quot;,
+                    &quot;desc&quot;: &quot;Relative to the pivot.&quot;,
+                    &quot;lua_type&quot;: &quot;{VectorLike}?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;pivot&quot;,
+                    &quot;desc&quot;: &quot;Defaults to the origin.&quot;,
+                    &quot;lua_type&quot;: &quot;VectorLike?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CubicSpline&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 143,
+                &quot;path&quot;: &quot;src/init.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;bSpline&quot;,
+            &quot;desc&quot;: &quot;A uniform cubic B-spline: smooth everywhere, including across joints, but it only passes near its points.\nNeeds at least four points.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;points&quot;,
+                    &quot;desc&quot;: &quot;Relative to the pivot.&quot;,
+                    &quot;lua_type&quot;: &quot;{VectorLike}?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;pivot&quot;,
+                    &quot;desc&quot;: &quot;Defaults to the origin.&quot;,
+                    &quot;lua_type&quot;: &quot;VectorLike?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CubicSpline&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 156,
+                &quot;path&quot;: &quot;src/init.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;sampled&quot;,
+            &quot;desc&quot;: &quot;A static copy of `source` as straight segments `spacing` studs apart along it, for the fastest distance\nlookups. Smaller spacing follows curves more closely. It doesn&#x27;t follow later edits to `source`; sample it\nagain after changing it.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;source&quot;,
+                    &quot;desc&quot;: &quot;The spline to copy.&quot;,
+                    &quot;lua_type&quot;: &quot;LinearSpline | CubicSpline&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;spacing&quot;,
+                    &quot;desc&quot;: &quot;Studs between samples, along the spline.&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;SampledSpline&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;Spacing must be more than 0\&quot;&quot;,
+                    &quot;desc&quot;: &quot;If `spacing` isn&#x27;t positive.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;Spline doesn&#x27;t have enough points to make a curve\&quot;&quot;,
+                    &quot;desc&quot;: &quot;If `source` has no curves.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 172,
+                &quot;path&quot;: &quot;src/init.luau&quot;
+            }
+        }
+    ],
+    &quot;properties&quot;: [],
+    &quot;types&quot;: [
+        {
+            &quot;name&quot;: &quot;VectorLike&quot;,
+            &quot;desc&quot;: &quot;Anything Splynx accepts as a position or velocity.&quot;,
+            &quot;lua_type&quot;: &quot;Vector3 | vector&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 68,
+                &quot;path&quot;: &quot;src/init.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Spline&quot;,
+            &quot;desc&quot;: &quot;Any spline.&quot;,
+            &quot;lua_type&quot;: &quot;LinearSpline | CubicSpline | SampledSpline&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 78,
+                &quot;path&quot;: &quot;src/init.luau&quot;
+            }
+        }
+    ],
+    &quot;name&quot;: &quot;Splynx&quot;,
+    &quot;desc&quot;: &quot;Splines built for fast lookups. There are three kinds:\n\n| Kind | Made by | Shape | Editable |\n| --- | --- | --- | --- |\n| [LinearSpline] | [Splynx.linear] | Straight segments between the points | Yes |\n| [CubicSpline] | [Splynx.bezier], [Splynx.hermite], [Splynx.cardinal], [Splynx.catmullRom], [Splynx.bSpline] | Smooth curves | Yes |\n| [SampledSpline] | [Splynx.sampled] | Straight segments a fixed distance apart along another spline | No |\n\nLookups are prioritised over edits: everything that speeds up a lookup is precomputed, and rebuilt when the\nspline changes. Run `lune run bench` for current numbers.\n\n### Points and the pivot\n\nPoints are relative to the spline&#x27;s pivot, and every position a spline returns has the pivot applied. Moving\nthe pivot moves the whole spline without rebuilding anything.\n\n### Alpha and distance\n\n`getPos(alpha)` splits alpha evenly across a spline&#x27;s curves, so it speeds up and slows down along curves of\ndifferent lengths. For a constant speed, work in distances: `getPosAtDistance`, `getUniformPos` and\n`sampleUniform`.\n\n### Hints\n\nDistance lookups take an optional hint and return a new one. Passing back the previous call&#x27;s hint starts the\nnext lookup where the last one ended, which makes lookups for something moving along the spline cheaper. Any\nhint gives the same result, so a stale one is fine; leave it out for lookups that jump around.\n\n```lua\nlocal spline = Splynx.catmullRom({ Vector3.new(0, 0, 0), Vector3.new(10, 5, 0), Vector3.new(20, 0, 0) })\n\nlocal distance, hint = 0, nil\nRunService.Heartbeat:Connect(function(deltaTime)\n    distance = (distance + 12 * deltaTime) % spline:getLength()\n    local position\n    position, hint = spline:getPosAtDistance(distance, hint)\n    part.Position = position\nend)\n```\n\n### Vectors\n\nInputs accept `Vector3` or `vector`, and outputs are `vector`. On Roblox the two are the same value, but the\ntype checker treats them as different types, so outputs may need a cast where a `Vector3` is expected.&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 52,
+        &quot;path&quot;: &quot;src/init.luau&quot;
+    }
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#Spline" class="table-of-contents__link toc-highlight">Spline</a></li><li><a href="#VectorLike" class="table-of-contents__link toc-highlight">VectorLike</a></li></ul></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#bezier" class="table-of-contents__link toc-highlight">.bezier</a></li><li><a href="#bSpline" class="table-of-contents__link toc-highlight">.bSpline</a></li><li><a href="#cardinal" class="table-of-contents__link toc-highlight">.cardinal</a></li><li><a href="#catmullRom" class="table-of-contents__link toc-highlight">.catmullRom</a></li><li><a href="#hermite" class="table-of-contents__link toc-highlight">.hermite</a></li><li><a href="#linear" class="table-of-contents__link toc-highlight">.linear</a></li><li><a href="#sampled" class="table-of-contents__link toc-highlight">.sampled</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 gigahd. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+</body>
+</html>
