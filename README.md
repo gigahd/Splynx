@@ -48,3 +48,5 @@ Tools are managed with [Rokit](https://github.com/rojo-rbx/rokit): `rokit instal
 ## License
 
 MIT
+
+## [Documentation](https://gigahd.github.io/Splynx/)
