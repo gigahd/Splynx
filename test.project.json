@@ -1,0 +1,19 @@
+{
+  "name": "Splynx Test",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Splynx": {
+        "$path": "src"
+      },
+      "SplynxChecks": {
+        "$path": "tests/Checks.luau"
+      }
+    },
+    "ServerScriptService": {
+      "SplynxTests": {
+        "$path": "tests/roblox"
+      }
+    }
+  }
+}

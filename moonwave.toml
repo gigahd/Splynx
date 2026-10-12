@@ -1,0 +1,4 @@
+title = "Splynx"
+
+# Put the overview first instead of sorting it last
+classOrder = ["Splynx", "LinearSpline", "CubicSpline", "SampledSpline"]
