@@ -1,12 +1,11 @@
 [package]
 name = "gigahd/splynx"
-description = "Fast splines for Roblox: linear, Bezier, Hermite, Catmull-Rom, cardinal and B-splines, with constant-speed distance lookups"
-version = "0.1.0"
+description = "Fast splines for Roblox: linear, Bezier, Hermite, Catmull-Rom, cardinal, B-splines, rounded corners and arc length corners, with constant-speed distance lookups"
+version = "0.2.0"
 license = "MIT"
 authors = ["GigaHD"]
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
-# Only ship the library; tests, benchmarks and tooling stay in the repository
 exclude = ["tests", "test.project.json", "sourcemap.json", "moonwave.toml", "rokit.toml", "selene.toml", "stylua.toml"]
 
 [dependencies]
