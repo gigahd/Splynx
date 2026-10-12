@@ -3,10 +3,15 @@
 -- White cubes are curve joints and thin lines from points are velocities (drawn at 1/3 length).
 -- The black ball moves at TRAVEL_SPEED studs/s with getPosAtDistance (distance += dt * speed), and the label shows
 -- its measured speed. The white ball uses getPos(distance / length): it finishes each lap at the same time but speeds
--- up and slows down, and any jump at a joint is easy to spot.
+-- up and slows down, and any jump at a joint is easy to spot. The cube walks SIDE_OFFSET studs to the right of the
+-- black ball with getOffsetPosAtDistance, facing the direction of travel. Behind it, UNIT_COUNT smaller cubes walk
+-- in pairs either side of the spline, all placed by one getPosAtDistances call per frame.
+-- Rounded and Filleted rows have a CornerSize attribute on their pivot: change it in the Properties window to set
+-- every corner's reach (Rounded) or radius (Filleted) and watch the difference at sharp and shallow corners.
 -- Every spline type is followed by a sampled row: the same spline sampled every SAMPLED_SPACING studs, drawn as its
 -- sampled segments with a marker at each sample. It samples again when you move a point. Both balls move at a
--- constant speed there, since a sampled spline's alpha is already uniform.
+-- constant speed there, since a sampled spline's alpha is already uniform. Linear, Rounded and Filleted keep their
+-- joints when sampled, so the corners stay where they are.
 -- Moving parts from the server looks choppy in Play mode (F5), so use Run mode (F8) to judge smoothness.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -23,6 +28,10 @@ local TRAVEL_SPEED = 12 -- studs per second
 local CURVE_THICKNESS = 0.35
 local GUIDE_THICKNESS = 0.12
 local SAMPLED_SPACING = 0.5
+local SIDE_OFFSET = 2
+local CORNER_SIZE = 4
+local UNIT_COUNT = 8
+local UNIT_GAP = 2.5 -- studs between pairs of units along the spline
 
 local POINTS = {
     Vector3.new(0, 0, 0),
@@ -48,6 +57,11 @@ type DemoDefinition = {
     build: (points: { Vector3 }, pivot: Vector3) -> Source,
     showVelocities: boolean?,
     showControlPolygon: boolean?,
+    -- Put a sample on every joint when sampling
+    keepJoints: boolean?,
+    -- Starting corner size, editable through the pivot's CornerSize attribute, and what it measures
+    cornerSize: number?,
+    cornerMeasure: string?,
     -- Draw and travel along a sampled copy of the spline instead
     sampledSpacing: number?,
 }
@@ -86,6 +100,27 @@ local SPLINE_DEFINITIONS: { DemoDefinition } = {
         build = function(points, pivot)
             return Splynx.linear(points, pivot)
         end,
+        keepJoints = true,
+    },
+    {
+        name = "Rounded",
+        build = function(points, pivot)
+            return Splynx.rounded(points, CORNER_SIZE, pivot)
+        end,
+        showControlPolygon = true,
+        keepJoints = true,
+        cornerSize = CORNER_SIZE,
+        cornerMeasure = "reach",
+    },
+    {
+        name = "Filleted",
+        build = function(points, pivot)
+            return Splynx.filleted(points, CORNER_SIZE, pivot)
+        end,
+        showControlPolygon = true,
+        keepJoints = true,
+        cornerSize = CORNER_SIZE,
+        cornerMeasure = "radius",
     },
     {
         name = "B-Spline",
@@ -100,9 +135,13 @@ local SPLINE_DEFINITIONS: { DemoDefinition } = {
 local DEFINITIONS: { DemoDefinition } = {}
 for _, definition in SPLINE_DEFINITIONS do
     table.insert(DEFINITIONS, definition)
+    local keeping = if definition.keepJoints then ", keeping joints" else ""
     table.insert(DEFINITIONS, {
-        name = `{definition.name} sampled every {SAMPLED_SPACING} studs`,
+        name = `{definition.name} sampled every {SAMPLED_SPACING} studs{keeping}`,
         build = definition.build,
+        keepJoints = definition.keepJoints,
+        cornerSize = definition.cornerSize,
+        cornerMeasure = definition.cornerMeasure,
         sampledSpacing = SAMPLED_SPACING,
     })
 end
@@ -193,6 +232,15 @@ type Demo = {
     guidePool: Pool,
     traveler: Part,
     uniformTraveler: Part,
+    sideTraveler: Part,
+    -- The units walking either side of the spline, and the lists getPosAtDistances reads and fills each frame
+    units: { Part },
+    unitDistances: { number },
+    unitOffsets: { number },
+    unitPositions: { vector },
+    unitDirections: { vector },
+    unitHints: { number },
+    cornerSize: number?,
     label: TextLabel,
     summary: string,
     distance: number,
@@ -218,6 +266,11 @@ local function redraw(demo: Demo)
 
     local curve, joints = {}, {}
     local jointSize
+    local name = demo.definition.name
+    local cornerSize = demo.cornerSize
+    if cornerSize then
+        name = string.format("%s (%s %.2f)", name, demo.definition.cornerMeasure or "size", cornerSize)
+    end
     if spacing then
         -- The sampled segments themselves, with a marker at every sample
         local sampled = demo.spline :: Splynx.SampledSpline
@@ -227,12 +280,7 @@ local function redraw(demo: Demo)
         end
         joints = curve
         jointSize = 0.5
-        demo.summary = string.format(
-            "%s\n%d segments, length %.2f",
-            demo.definition.name,
-            sampled:getCurveCount(),
-            sampled:getLength()
-        )
+        demo.summary = string.format("%s\n%d segments, length %.2f", name, sampled:getCurveCount(), sampled:getLength())
     else
         for i, position in source:sample(source:getCurveCount() * SAMPLES_PER_CURVE + 1) do
             curve[i] = toVector3(position)
@@ -241,12 +289,7 @@ local function redraw(demo: Demo)
             joints[i] = toVector3(joint)
         end
         jointSize = 0.9
-        demo.summary = string.format(
-            "%s\n%d curves, length %.2f",
-            demo.definition.name,
-            source:getCurveCount(),
-            source:getLength()
-        )
+        demo.summary = string.format("%s\n%d curves, length %.2f", name, source:getCurveCount(), source:getLength())
     end
     drawPolyline(demo.curvePool, curve, CURVE_THICKNESS)
 
@@ -287,7 +330,7 @@ local function createDemo(definition: DemoDefinition, row: number): Demo
 
     local source = definition.build(POINTS, origin)
     local spacing = definition.sampledSpacing
-    local spline: Spline = if spacing then Splynx.sampled(source, spacing) else source
+    local spline: Spline = if spacing then Splynx.sampled(source, spacing, definition.keepJoints) else source
 
     local pivotPart = makePart({
         Name = "Pivot",
@@ -310,6 +353,22 @@ local function createDemo(definition: DemoDefinition, row: number): Demo
     label.Font = Enum.Font.GothamBold
     label.TextSize = 16
     label.Parent = billboard
+
+    if definition.cornerSize then
+        pivotPart:SetAttribute("CornerSize", definition.cornerSize)
+    end
+
+    local units, unitDistances, unitOffsets = {}, {}, {}
+    for i = 1, UNIT_COUNT do
+        local unit = makeDecoration(Color3.fromRGB(60, 60, 60), Enum.Material.SmoothPlastic)
+        unit.Size = Vector3.new(0.6, 0.6, 1)
+        unit.Name = `Unit{i}`
+        unit.Parent = folder
+        units[i] = unit
+        unitDistances[i] = 0
+        -- Pairs, one either side
+        unitOffsets[i] = if i % 2 == 1 then SIDE_OFFSET else -SIDE_OFFSET
+    end
 
     local pointParts = {}
     local lastPoints = {}
@@ -344,6 +403,14 @@ local function createDemo(definition: DemoDefinition, row: number): Demo
         end),
         traveler = makeDecoration(Color3.new(1, 1, 1)),
         uniformTraveler = makeDecoration(Color3.new(0, 0, 0), Enum.Material.SmoothPlastic),
+        sideTraveler = makeDecoration(Color3.new(0, 0, 0), Enum.Material.SmoothPlastic),
+        units = units,
+        unitDistances = unitDistances,
+        unitOffsets = unitOffsets,
+        unitPositions = table.create(UNIT_COUNT),
+        unitDirections = table.create(UNIT_COUNT),
+        unitHints = table.create(UNIT_COUNT),
+        cornerSize = definition.cornerSize,
         label = label,
         summary = "",
         distance = 0,
@@ -357,6 +424,9 @@ local function createDemo(definition: DemoDefinition, row: number): Demo
     demo.uniformTraveler.Size = Vector3.one * 1.8
     demo.uniformTraveler.Name = "UniformTraveler"
     demo.uniformTraveler.Parent = folder
+    demo.sideTraveler.Size = Vector3.new(0.8, 0.8, 1.6)
+    demo.sideTraveler.Name = "SideTraveler"
+    demo.sideTraveler.Parent = folder
 
     redraw(demo)
     return demo
@@ -389,9 +459,19 @@ local function sync(demo: Demo): boolean
         end
     end
 
+    local cornerSize = demo.pivotPart:GetAttribute("CornerSize")
+    if demo.cornerSize and type(cornerSize) == "number" and cornerSize ~= demo.cornerSize then
+        demo.cornerSize = cornerSize
+        local cubic = source :: Splynx.CubicSpline
+        for i in demo.pointParts do
+            cubic:setRadius(i, cornerSize)
+        end
+        pointsChanged = true
+    end
+
     local spacing = demo.definition.sampledSpacing
     if pointsChanged and spacing then
-        demo.spline = Splynx.sampled(source, spacing)
+        demo.spline = Splynx.sampled(source, spacing, demo.definition.keepJoints)
     end
 
     return changed or pointsChanged
@@ -421,6 +501,24 @@ RunService.Heartbeat:Connect(function(deltaTime)
         demo.hint = hint
         demo.uniformTraveler.Position = toVector3(position)
         demo.traveler.Position = toVector3(spline:getPos(demo.distance / length))
+        local sidePosition, direction = spline:getOffsetPosAtDistance(demo.distance, SIDE_OFFSET, hint)
+        demo.sideTraveler.CFrame = CFrame.lookAt(toVector3(sidePosition), toVector3(sidePosition + direction))
+
+        -- The units trail the black ball in pairs, and one call places them all, reusing the same lists every frame
+        for i in demo.units do
+            demo.unitDistances[i] = (demo.distance - ((i + 1) // 2) * UNIT_GAP) % length
+        end
+        spline:getPosAtDistances(
+            demo.unitDistances,
+            demo.unitPositions,
+            demo.unitDirections,
+            demo.unitOffsets,
+            demo.unitHints
+        )
+        for i, unit in demo.units do
+            local unitPosition = toVector3(demo.unitPositions[i])
+            unit.CFrame = CFrame.lookAt(unitPosition, unitPosition + toVector3(demo.unitDirections[i]))
+        end
 
         -- Straight-line speed since the last frame. It dips for a frame when the ball wraps around or cuts a sharp
         -- corner (Linear), because the ball then travels further than the straight line between its two positions.

@@ -23,9 +23,13 @@ function Hermite.fromVelocities(p0: vector, v0: vector, p1: vector, v1: vector):
         2 * p0 + v0 - 2 * p1 + v1
 end
 
-function Hermite.coefficients(points: { vector }, index: number, velocities: { vector }?, _scale: number): (vector, vector, vector, vector)
-    local pointVelocities = velocities :: { vector }
-    return Hermite.fromVelocities(points[index], pointVelocities[index], points[index + 1], pointVelocities[index + 1])
+function Hermite.coefficients(
+    inputs: { points: { vector }, velocities: { vector }? },
+    index: number
+): (vector, vector, vector, vector)
+    local points = inputs.points
+    local velocities = inputs.velocities :: { vector }
+    return Hermite.fromVelocities(points[index], velocities[index], points[index + 1], velocities[index + 1])
 end
 
 return Hermite

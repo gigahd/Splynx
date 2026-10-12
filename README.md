@@ -36,6 +36,10 @@ end)
 Need the fastest lookups and won't edit the spline? `Splynx.sampled(spline, 0.5)` makes a static copy with constant-time
 distance lookups.
 
+Laying a path out from waypoints? `Splynx.rounded(points, 2)` keeps the straight parts straight and rounds each
+corner, starting 2 studs before it and ending 2 studs after. For many things moving along one spline,
+`getPosAtDistances` fills positions, directions and sideways offsets for all of them in one call, into tables you reuse.
+
 ## Develop
 
 Tools are managed with [Rokit](https://github.com/rojo-rbx/rokit): `rokit install`.

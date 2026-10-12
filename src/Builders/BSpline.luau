@@ -14,7 +14,8 @@ function BSpline.affectedCurves(pointIndex: number): (number, number)
     return pointIndex - 3, pointIndex
 end
 
-function BSpline.coefficients(points: { vector }, index: number, _velocities: { vector }?, _scale: number): (vector, vector, vector, vector)
+function BSpline.coefficients(inputs: { points: { vector } }, index: number): (vector, vector, vector, vector)
+    local points = inputs.points
     local p0 = points[index]
     local p1 = points[index + 1]
     local p2 = points[index + 2]

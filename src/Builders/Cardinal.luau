@@ -29,7 +29,11 @@ function Cardinal.velocity(points: { vector }, index: number, scale: number): ve
     return (nextPoint - previous) * scale
 end
 
-function Cardinal.coefficients(points: { vector }, index: number, _velocities: { vector }?, scale: number): (vector, vector, vector, vector)
+function Cardinal.coefficients(
+    inputs: { points: { vector }, scale: number },
+    index: number
+): (vector, vector, vector, vector)
+    local points, scale = inputs.points, inputs.scale
     return Hermite.fromVelocities(
         points[index],
         Cardinal.velocity(points, index, scale),

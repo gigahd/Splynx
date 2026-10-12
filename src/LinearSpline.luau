@@ -25,6 +25,9 @@ type LinearSplineData = {
     pivot: vector,
     points: { vector },
     directions: { vector },
+    -- Each segment's right, and the same with vertical segments borrowing a neighbour's, for offsets
+    segmentSides: { vector },
+    sides: { vector },
     segmentLengths: { number },
     distances: { number } | false,
     cachedLength: number,
@@ -37,7 +40,9 @@ export type LinearSpline = setmetatable<LinearSplineData, typeof(LinearSpline)>
 local function updateSegment(self: LinearSplineData, index: number)
     local delta = self.points[index + 1] - self.points[index]
     local length = vector.magnitude(delta)
-    self.directions[index] = if length > 0 then delta / length else vector.zero
+    local direction = if length > 0 then delta / length else vector.zero
+    self.directions[index] = direction
+    self.segmentSides[index] = Vector.rightOf(direction)
     self.segmentLengths[index] = length
 end
 
@@ -51,6 +56,7 @@ end
 local function rebuild(self: LinearSplineData)
     local segmentCount = math.max(#self.points - 1, 0)
     self.directions = table.create(segmentCount)
+    self.segmentSides = table.create(segmentCount)
     self.segmentLengths = table.create(segmentCount)
     updateSegments(self, 1, segmentCount)
 end
@@ -83,11 +89,17 @@ local function getDistances(self: LinearSplineData): { number }
     self.buckets = buckets
     self.bucketScale = if total > 0 then bucketCount / total else 0
 
+    local sides = table.clone(self.segmentSides)
+    Vector.fillGaps(sides)
+    self.sides = sides
+
     self.distances = out
     self.cachedLength = total
     return out
 end
 
+-- The segment `distance` is on and how far along it. getPosAtDistance, getPosAndDirectionAtDistance,
+-- getOffsetPosAtDistance and getPosAtDistances repeat this inline because it's faster, so change them together.
 local function locate(self: LinearSplineData, distance: number, hint: number?): (number, number)
     local distances = self.distances or getDistances(self)
     local segmentCount = #distances - 1
@@ -120,11 +132,34 @@ local function locate(self: LinearSplineData, distance: number, hint: number?): 
     return index, distance - distances[index]
 end
 
+-- Segment `index`'s direction. A segment with no length borrows the nearest direction, looking ahead first, so a
+-- spline that starts or ends with a repeated point still has a direction there.
+local function getDirection(self: LinearSplineData, index: number): vector
+    local directions = self.directions
+    local direction = directions[index]
+    if direction ~= vector.zero then
+        return direction
+    end
+    for after = index + 1, #directions do
+        if directions[after] ~= vector.zero then
+            return directions[after]
+        end
+    end
+    for before = index - 1, 1, -1 do
+        if directions[before] ~= vector.zero then
+            return directions[before]
+        end
+    end
+    return vector.zero
+end
+
 function LinearSpline.new(points: { VectorLike }, pivot: VectorLike?): LinearSpline
     local data: LinearSplineData = {
         pivot = if pivot then Vector.from(pivot) else vector.zero,
         points = Vector.fromList(points),
         directions = {},
+        segmentSides = {},
+        sides = {},
         segmentLengths = {},
         distances = false,
         cachedLength = 0,
@@ -162,30 +197,34 @@ end
     @within LinearSpline
     @method sample
     @param count number
-    @return {vector}
+    @param out {vector}? -- A list to fill instead of making a new one. Anything past `count` is removed.
+    @return {vector} -- `out`, if given.
     @error "Spline doesn't have enough points to make a segment" -- If the spline has fewer than two points.
 
     `count` positions at evenly spaced alphas, including both ends. Faster than calling [LinearSpline:getPos] in a
     loop. Use [LinearSpline:sampleUniform] for positions evenly spaced along the length instead.
 ]=]
-function LinearSpline.sample(self: LinearSplineData, count: number): { vector }
+function LinearSpline.sample(self: LinearSplineData, count: number, out: { vector }?): { vector }
+    local result = Vector.output(out, count)
     if count <= 1 then
-        return if count == 1 then { LinearSpline.getPos(self, 0) } else {}
+        if count == 1 then
+            result[1] = LinearSpline.getPos(self, 0)
+        end
+        return result
     end
     local points = self.points
     local segmentCount = #points - 1
     assert(segmentCount > 0, NOT_ENOUGH_POINTS)
     local pivot = self.pivot
     local step = segmentCount / (count - 1)
-    local out = table.create(count)
     for i = 0, count - 1 do
         local u = i * step
         local index = math.min(math.floor(u) + 1, segmentCount)
         local start: vector = points[index]
         local finish: vector = points[index + 1]
-        out[i + 1] = pivot + start + (finish - start) * (u - (index - 1))
+        result[i + 1] = pivot + start + (finish - start) * (u - (index - 1))
     end
-    return out
+    return result
 end
 
 --[=[
@@ -296,32 +335,262 @@ end
 
 --[=[
     @within LinearSpline
+    @method getDirectionAtDistance
+    @param distance number -- Studs from the start. Clamped to the length.
+    @param hint number? -- The hint returned by the previous lookup on this spline, if any.
+    @return vector -- A unit vector.
+    @return number -- A hint for the next lookup.
+    @error "Spline doesn't have enough points to make a segment" -- If the spline has fewer than two points.
+
+    The direction of the segment `distance` studs along the spline. It changes all at once at each point. A
+    spline with no length at all has a zero direction.
+]=]
+function LinearSpline.getDirectionAtDistance(self: LinearSplineData, distance: number, hint: number?): (vector, number)
+    local index = locate(self, distance, hint)
+    return getDirection(self, index), index
+end
+
+--[=[
+    @within LinearSpline
+    @method getPosAndDirectionAtDistance
+    @param distance number -- Studs from the start. Clamped to the length.
+    @param hint number? -- The hint returned by the previous lookup on this spline, if any.
+    @return vector -- The position.
+    @return vector -- The direction of travel, as in [LinearSpline:getDirectionAtDistance].
+    @return number -- A hint for the next lookup.
+    @error "Spline doesn't have enough points to make a segment" -- If the spline has fewer than two points.
+
+    [LinearSpline:getPosAtDistance] and [LinearSpline:getDirectionAtDistance] from one lookup.
+]=]
+function LinearSpline.getPosAndDirectionAtDistance(
+    self: LinearSplineData,
+    distance: number,
+    hint: number?
+): (vector, vector, number)
+    -- The same walk as getPosAtDistance, repeated here because it's faster inline
+    local distances = self.distances or getDistances(self)
+    local segmentCount = #distances - 1
+    assert(segmentCount > 0, NOT_ENOUGH_POINTS)
+    local index
+    if distance <= 0 then
+        index = 1
+        distance = 0
+    elseif distance >= distances[segmentCount + 1] then
+        index = segmentCount
+        distance = distances[segmentCount + 1]
+    else
+        if hint then
+            index = hint
+            if index < 1 or index > segmentCount or index % 1 ~= 0 then
+                index = math.clamp(index // 1, 1, segmentCount)
+            end
+        else
+            local bucket = distance * self.bucketScale // 1 + 1
+            if bucket > segmentCount * BUCKETS_PER_SEGMENT then
+                bucket = segmentCount * BUCKETS_PER_SEGMENT
+            end
+            index = self.buckets[bucket]
+        end
+        while distances[index + 1] <= distance do
+            index += 1
+        end
+        while distances[index] > distance do
+            index -= 1
+        end
+    end
+
+    local direction: vector = self.directions[index]
+    if direction == vector.zero then
+        -- Segments with no length are only landed on at the ends, where the offset along them is 0
+        direction = getDirection(self, index)
+    end
+    local start: vector = self.points[index]
+    return self.pivot + start + direction * (distance - distances[index]), direction, index
+end
+
+--[=[
+    @within LinearSpline
+    @method getOffsetPosAtDistance
+    @param distance number -- Studs from the start. Clamped to the length.
+    @param offset number -- Studs to the right of the direction of travel; negative is to the left.
+    @param hint number? -- The hint returned by the previous lookup on this spline, if any.
+    @return vector -- The offset position.
+    @return vector -- The spline's direction of travel there, as in [LinearSpline:getDirectionAtDistance].
+    @return number -- A hint for the next lookup.
+    @error "Spline doesn't have enough points to make a segment" -- If the spline has fewer than two points.
+
+    The position `offset` studs to the side of the spline, `distance` studs along it, for things that walk beside
+    the path instead of on it. The side is horizontal, so the height stays the spline's. Straight up or down has no
+    horizontal side, so there it keeps the side of the nearest part of the spline that isn't vertical: a climb that
+    bends up and over in one vertical plane keeps the same side the whole way.
+
+    Offset positions jump at each point, where the side flips from one segment's to the next. [Splynx.rounded]
+    makes the same path with rounded corners, which offset positions move around smoothly.
+]=]
+function LinearSpline.getOffsetPosAtDistance(
+    self: LinearSplineData,
+    distance: number,
+    offset: number,
+    hint: number?
+): (vector, vector, number)
+    -- The same as getPosAndDirectionAtDistance, repeated here because it's faster inline
+    local distances = self.distances or getDistances(self)
+    local segmentCount = #distances - 1
+    assert(segmentCount > 0, NOT_ENOUGH_POINTS)
+    local index
+    if distance <= 0 then
+        index = 1
+        distance = 0
+    elseif distance >= distances[segmentCount + 1] then
+        index = segmentCount
+        distance = distances[segmentCount + 1]
+    else
+        if hint then
+            index = hint
+            if index < 1 or index > segmentCount or index % 1 ~= 0 then
+                index = math.clamp(index // 1, 1, segmentCount)
+            end
+        else
+            local bucket = distance * self.bucketScale // 1 + 1
+            if bucket > segmentCount * BUCKETS_PER_SEGMENT then
+                bucket = segmentCount * BUCKETS_PER_SEGMENT
+            end
+            index = self.buckets[bucket]
+        end
+        while distances[index + 1] <= distance do
+            index += 1
+        end
+        while distances[index] > distance do
+            index -= 1
+        end
+    end
+
+    local direction: vector = self.directions[index]
+    if direction == vector.zero then
+        -- Segments with no length are only landed on at the ends, where the offset along them is 0
+        direction = getDirection(self, index)
+    end
+    local start: vector = self.points[index]
+    local position = self.pivot + start + direction * (distance - distances[index])
+    return position + self.sides[index] * offset, direction, index
+end
+
+--[=[
+    @within LinearSpline
+    @method getPosAtDistances
+    @param distances {number} -- Studs from the start, one per lookup. Clamped to the length.
+    @param outPositions {vector} -- Filled with the position for each distance.
+    @param outDirections {vector}? -- Filled with the direction of travel for each distance.
+    @param offsets {number}? -- One per distance: studs to the right, as in [LinearSpline:getOffsetPosAtDistance].
+    @param hints {number}? -- One per distance, read and then replaced with the hint for the next call.
+    @error "Spline doesn't have enough points to make a segment" -- If the spline has fewer than two points.
+
+    Many lookups in one call, written into lists you keep, so nothing new is made. Meant for many things moving
+    along the same spline: keep their distances (and offsets) in lists, and pass the same hints list every frame.
+]=]
+function LinearSpline.getPosAtDistances(
+    self: LinearSplineData,
+    distances: { number },
+    outPositions: { vector },
+    outDirections: { vector }?,
+    offsets: { number }?,
+    hints: { number }?
+)
+    if distances[1] == nil then
+        return
+    end
+    local splineDistances = self.distances or getDistances(self)
+    local segmentCount = #splineDistances - 1
+    assert(segmentCount > 0, NOT_ENOUGH_POINTS)
+    local length = splineDistances[segmentCount + 1]
+    local bucketScale = self.bucketScale
+    local buckets = self.buckets
+    local points = self.points
+    local directions = self.directions
+    local sides = self.sides
+    local pivot = self.pivot
+    for i, distance in distances do
+        -- The same walk as getPosAtDistance, repeated here because it's faster inline
+        local index
+        if distance <= 0 then
+            index = 1
+            distance = 0
+        elseif distance >= length then
+            index = segmentCount
+            distance = length
+        else
+            local hint = if hints then hints[i] else nil
+            if hint then
+                index = hint
+                if index < 1 or index > segmentCount or index % 1 ~= 0 then
+                    index = math.clamp(index // 1, 1, segmentCount)
+                end
+            else
+                local bucket = distance * bucketScale // 1 + 1
+                if bucket > segmentCount * BUCKETS_PER_SEGMENT then
+                    bucket = segmentCount * BUCKETS_PER_SEGMENT
+                end
+                index = buckets[bucket]
+            end
+            while splineDistances[index + 1] <= distance do
+                index += 1
+            end
+            while splineDistances[index] > distance do
+                index -= 1
+            end
+        end
+
+        local direction: vector = directions[index]
+        if direction == vector.zero then
+            direction = getDirection(self, index)
+        end
+        local start: vector = points[index]
+        local position = pivot + start + direction * (distance - splineDistances[index])
+        if offsets then
+            position += sides[index] * offsets[i]
+        end
+        outPositions[i] = position
+        if outDirections then
+            outDirections[i] = direction
+        end
+        if hints then
+            hints[i] = index
+        end
+    end
+end
+
+--[=[
+    @within LinearSpline
     @method sampleUniform
     @param count number
-    @return {vector}
+    @param out {vector}? -- A list to fill instead of making a new one. Anything past `count` is removed.
+    @return {vector} -- `out`, if given.
     @error "Spline doesn't have enough points to make a segment" -- If the spline has fewer than two points.
 
     `count` positions evenly spaced along the length, including both ends. Faster than calling
     [LinearSpline:getPosAtDistance] in a loop.
 ]=]
-function LinearSpline.sampleUniform(self: LinearSplineData, count: number): { vector }
+function LinearSpline.sampleUniform(self: LinearSplineData, count: number, out: { vector }?): { vector }
+    local result = Vector.output(out, count)
     if count <= 1 then
-        return if count == 1 then { LinearSpline.getPos(self, 0) } else {}
+        if count == 1 then
+            result[1] = LinearSpline.getPos(self, 0)
+        end
+        return result
     end
     local step = LinearSpline.getLength(self) / (count - 1)
     local points = self.points
     local directions = self.directions
     local pivot = self.pivot
-    local out = table.create(count)
     local hint = 1
     for i = 0, count - 1 do
         local index, offset = locate(self, i * step, hint)
         hint = index
         local start: vector = points[index]
         local direction: vector = directions[index]
-        out[i + 1] = pivot + start + direction * offset
+        result[i + 1] = pivot + start + direction * offset
     end
-    return out
+    return result
 end
 
 --[=[
@@ -349,6 +618,20 @@ end
 ]=]
 function LinearSpline.getCurveCount(self: LinearSplineData): number
     return math.max(#self.points - 1, 0)
+end
+
+--[=[
+    @within LinearSpline
+    @method getJointDistances
+    @return {number}
+
+    How far along the spline each point is.
+]=]
+function LinearSpline.getJointDistances(self: LinearSplineData): { number }
+    if #self.points == 0 then
+        return {}
+    end
+    return table.clone(self.distances or getDistances(self))
 end
 
 --[=[

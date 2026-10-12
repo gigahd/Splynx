@@ -14,18 +14,19 @@ function Bezier.affectedCurves(pointIndex: number): (number, number)
     return (pointIndex + 1) // 3, (pointIndex + 2) // 3
 end
 
-function Bezier.coefficients(points: { vector }, index: number, _velocities: { vector }?, _scale: number): (vector, vector, vector, vector)
-    local base = 3 * index - 2
-    local p0 = points[base]
-    local p1 = points[base + 1]
-    local p2 = points[base + 2]
-    local p3 = points[base + 3]
-
+-- Polynomial coefficients of the curve with control points p0 to p3
+function Bezier.fromPoints(p0: vector, p1: vector, p2: vector, p3: vector): (vector, vector, vector, vector)
     return
         p0,
         -3 * p0 + 3 * p1,
         3 * p0 - 6 * p1 + 3 * p2,
         -p0 + 3 * p1 - 3 * p2 + p3
+end
+
+function Bezier.coefficients(inputs: { points: { vector } }, index: number): (vector, vector, vector, vector)
+    local points = inputs.points
+    local base = 3 * index - 2
+    return Bezier.fromPoints(points[base], points[base + 1], points[base + 2], points[base + 3])
 end
 
 return Bezier

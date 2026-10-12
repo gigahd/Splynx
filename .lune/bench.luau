@@ -13,6 +13,10 @@ local Splynx = require("../src")
 local POINT_COUNT = 61 -- 3k + 1, so the Bezier spline uses every point
 local BATCH_SIZE = 1000
 local SAMPLED_SPACING = 0.5
+-- Rounded's reach and Filleted's radius
+local CORNER_SIZE = 20
+-- Units moving along the spline at once, for the batch lookups
+local UNIT_COUNT = 1000
 local RUNS = 5
 local MIN_RUN_SECONDS = 0.05
 
@@ -56,6 +60,8 @@ type Column = {
     build: () -> any,
     -- Static splines can't be edited, so the edit rows skip them
     editable: boolean,
+    -- Has corner radii, for the setRadius row
+    corners: boolean?,
 }
 
 local COLUMNS: { Column } = {
@@ -65,19 +71,51 @@ local COLUMNS: { Column } = {
     { name = "BSpline", editable = true, build = function() return Splynx.bSpline(points) end },
     { name = "Linear", editable = true, build = function() return Splynx.linear(points) end },
     {
+        name = "Rounded",
+        editable = true,
+        corners = true,
+        build = function()
+            return Splynx.rounded(points, CORNER_SIZE)
+        end,
+    },
+    {
+        name = "Filleted",
+        editable = true,
+        corners = true,
+        build = function()
+            return Splynx.filleted(points, CORNER_SIZE)
+        end,
+    },
+    {
         name = "Sampled",
         editable = false,
         build = function()
             return Splynx.sampled(Splynx.catmullRom(points), SAMPLED_SPACING)
         end,
     },
+    {
+        name = "SampledKept",
+        editable = false,
+        build = function()
+            return Splynx.sampled(Splynx.rounded(points, CORNER_SIZE), SAMPLED_SPACING, true)
+        end,
+    },
 }
+
+-- Evenly spread units, each with its own distance, hint and offset
+local unitDistances, unitOffsets = table.create(UNIT_COUNT), table.create(UNIT_COUNT)
+for i = 1, UNIT_COUNT do
+    unitDistances[i] = (i - 1) / UNIT_COUNT
+    unitOffsets[i] = (i % 5) - 2
+end
 
 type Benchmark = {
     name: string,
     -- Runs `iterations` operations and returns how many units of work they were
     run: (spline: any, iterations: number) -> number,
     edits: boolean?,
+    -- Only for splines with corner radii
+    cornerEdits: boolean?,
     -- The same work done with the Path baseline, when it has an equivalent
     path: ((path: Path.Path, iterations: number) -> number)?,
 }
@@ -150,6 +188,88 @@ local BENCHMARKS: { Benchmark } = {
         end,
     },
     {
+        name = "getPosAndDirection moving + hint",
+        run = function(spline, iterations)
+            local length = spline:getLength()
+            local step = length / 997
+            local distance = 0
+            local hint
+            for _ = 1, iterations do
+                distance = (distance + step) % length
+                local _, _, newHint = spline:getPosAndDirectionAtDistance(distance, hint)
+                hint = newHint
+            end
+            return iterations
+        end,
+        -- MoveAlong returns the direction as well
+        path = function(path, iterations)
+            local length = path.length
+            local step = length / 997
+            local distance = 0
+            local hint = 1
+            for _ = 1, iterations do
+                distance = (distance + step) % length
+                local _, _, index = path:MoveAlong(distance, hint)
+                hint = index
+            end
+            return iterations
+        end,
+    },
+    {
+        name = "getOffsetPos moving + hint",
+        run = function(spline, iterations)
+            local length = spline:getLength()
+            local step = length / 997
+            local distance = 0
+            local hint
+            for _ = 1, iterations do
+                distance = (distance + step) % length
+                local _, _, newHint = spline:getOffsetPosAtDistance(distance, 1.5, hint)
+                hint = newHint
+            end
+            return iterations
+        end,
+    },
+    {
+        -- Every unit steps forward, then one batch call fills positions and directions, reusing every list
+        name = `getPosAtDistances({UNIT_COUNT}) per unit`,
+        run = function(spline, iterations)
+            local length = spline:getLength()
+            local step = length / 997
+            local distances = table.create(UNIT_COUNT)
+            for i, fraction in unitDistances do
+                distances[i] = fraction * length
+            end
+            local positions, directions, hints = table.create(UNIT_COUNT), table.create(UNIT_COUNT), {}
+            for _ = 1, iterations do
+                for i, distance in distances do
+                    distances[i] = (distance + step) % length
+                end
+                spline:getPosAtDistances(distances, positions, directions, unitOffsets, hints)
+            end
+            return iterations * UNIT_COUNT
+        end,
+        -- The same units with MoveAlong, each keeping its own waypoint index
+        path = function(path, iterations)
+            local length = path.length
+            local step = length / 997
+            local distances = table.create(UNIT_COUNT)
+            local indices = table.create(UNIT_COUNT, 1)
+            for i, fraction in unitDistances do
+                distances[i] = fraction * length
+            end
+            local positions, directions = table.create(UNIT_COUNT), table.create(UNIT_COUNT)
+            for _ = 1, iterations do
+                for i, distance in distances do
+                    distances[i] = (distance + step) % length
+                    local position, direction, index = path:MoveAlong(distances[i], indices[i])
+                    positions[i], directions[i], indices[i] = position, direction, index
+                end
+            end
+            return iterations * UNIT_COUNT
+        end,
+    },
+    {
         name = `sampleUniform({BATCH_SIZE}) per point`,
         run = function(spline, iterations)
             for _ = 1, iterations do
@@ -168,6 +288,16 @@ local BENCHMARKS: { Benchmark } = {
                     out[i + 1] = position
                     hint = index
                 end
+            end
+            return iterations * BATCH_SIZE
+        end,
+    },
+    {
+        name = `sampleUniform({BATCH_SIZE}, out) per point`,
+        run = function(spline, iterations)
+            local out = table.create(BATCH_SIZE)
+            for _ = 1, iterations do
+                spline:sampleUniform(BATCH_SIZE, out)
             end
             return iterations * BATCH_SIZE
         end,
@@ -222,11 +352,33 @@ local BENCHMARKS: { Benchmark } = {
         end,
     },
     {
+        name = "setRadius + getLength",
+        cornerEdits = true,
+        run = function(spline, iterations)
+            for i = 1, iterations do
+                local index = i % 1024 + 1
+                spline:setRadius(editIndices[index], alphas[index] * CORNER_SIZE * 2)
+                spline:getLength()
+            end
+            return iterations
+        end,
+    },
+    {
         name = `sampled(spacing {SAMPLED_SPACING})`,
         edits = true,
         run = function(spline, iterations)
             for _ = 1, iterations do
                 Splynx.sampled(spline, SAMPLED_SPACING)
+            end
+            return iterations
+        end,
+    },
+    {
+        name = `sampled(spacing {SAMPLED_SPACING}, keepJoints)`,
+        edits = true,
+        run = function(spline, iterations)
+            for _ = 1, iterations do
+                Splynx.sampled(spline, SAMPLED_SPACING, true)
             end
             return iterations
         end,
@@ -263,7 +415,7 @@ local function formatNanoseconds(nanoseconds: number): string
     return string.format("%.1f ns", nanoseconds)
 end
 
-local NAME_WIDTH = 32
+local NAME_WIDTH = 36
 local COLUMN_WIDTH = 12
 
 local function cell(text: string): string
@@ -274,13 +426,14 @@ local header = string.rep(" ", NAME_WIDTH)
 for _, column in COLUMNS do
     header ..= cell(column.name)
 end
-print(`{POINT_COUNT} control points; Sampled is the CatmullRom spline sampled every {SAMPLED_SPACING} studs`)
+print(`{POINT_COUNT} control points; Rounded has a reach of {CORNER_SIZE} and Filleted a radius of {CORNER_SIZE}`)
+print(`Sampled is the CatmullRom spline sampled every {SAMPLED_SPACING} studs; SampledKept is Rounded, keeping its joints`)
 print(header .. cell("Path"))
 
 for _, benchmark in BENCHMARKS do
     local row = string.format("%-" .. NAME_WIDTH .. "s", benchmark.name)
     for _, column in COLUMNS do
-        if benchmark.edits and not column.editable then
+        if (benchmark.edits and not column.editable) or (benchmark.cornerEdits and not column.corners) then
             row ..= cell("-")
         else
             -- Fresh spline per cell so earlier edits don't leak between benchmarks
@@ -295,4 +448,5 @@ end
 print()
 print("Path column: getPosAtDistance = MoveAlong (hint: previous index), moving + hint = MoveAlong in small steps")
 print("(index carried forward), sampleUniform = MoveAlong at increasing distances (index carried forward),")
-print("getLength = .length, setPoint + getLength = Path.new after moving a waypoint.")
+print("getLength = .length, setPoint + getLength = Path.new after moving a waypoint, getPosAtDistances = MoveAlong per")
+print("unit (each keeping its own index), getPosAndDirection = MoveAlong, which returns the direction too.")
