@@ -8,8 +8,8 @@
 | Kind | Made by | Shape | Editable |
 | --- | --- | --- | --- |
 | [LinearSpline] | [Splynx.linear] | Straight segments between the points | Yes |
-| [CubicSpline] | [Splynx.bezier], [Splynx.hermite], [Splynx.cardinal], [Splynx.catmullRom], [Splynx.bSpline] | Smooth curves | Yes |
-| [SampledSpline] | [Splynx.sampled] | Straight segments a fixed distance apart along another spline | No |
+| [CubicSpline] | [Splynx.bezier], [Splynx.hermite], [Splynx.cardinal], [Splynx.catmullRom], [Splynx.bSpline], [Splynx.rounded], [Splynx.filleted] | Smooth curves | Yes |
+| [SampledSpline] | [Splynx.sampled] | Straight segments between samples along another spline | No |
 
 Lookups are prioritised over edits: everything that speeds up a lookup is precomputed, and rebuilt when the
 spline changes. Run `lune run bench` for current numbers.
@@ -24,6 +24,10 @@ the pivot moves the whole spline without rebuilding anything.
 `getPos(alpha)` splits alpha evenly across a spline&#x27;s curves, so it speeds up and slows down along curves of
 different lengths. For a constant speed, work in distances: `getPosAtDistance`, `getUniformPos` and
 `sampleUniform`.
+
+Every distance lookup has variants that also give the direction of travel (`getPosAndDirectionAtDistance`),
+a position off to the side of the spline (`getOffsetPosAtDistance`), or many lookups at once written into
+lists you keep (`getPosAtDistances`).
 
 ### Hints
 
@@ -51,8 +55,8 @@ type checker treats them as different types, so outputs may need a cast where a 
 | Kind | Made by | Shape | Editable |
 | --- | --- | --- | --- |
 | [LinearSpline] | [Splynx.linear] | Straight segments between the points | Yes |
-| [CubicSpline] | [Splynx.bezier], [Splynx.hermite], [Splynx.cardinal], [Splynx.catmullRom], [Splynx.bSpline] | Smooth curves | Yes |
-| [SampledSpline] | [Splynx.sampled] | Straight segments a fixed distance apart along another spline | No |
+| [CubicSpline] | [Splynx.bezier], [Splynx.hermite], [Splynx.cardinal], [Splynx.catmullRom], [Splynx.bSpline], [Splynx.rounded], [Splynx.filleted] | Smooth curves | Yes |
+| [SampledSpline] | [Splynx.sampled] | Straight segments between samples along another spline | No |
 
 Lookups are prioritised over edits: everything that speeds up a lookup is precomputed, and rebuilt when the
 spline changes. Run `lune run bench` for current numbers.
@@ -67,6 +71,10 @@ the pivot moves the whole spline without rebuilding anything.
 `getPos(alpha)` splits alpha evenly across a spline&#x27;s curves, so it speeds up and slows down along curves of
 different lengths. For a constant speed, work in distances: `getPosAtDistance`, `getUniformPos` and
 `sampleUniform`.
+
+Every distance lookup has variants that also give the direction of travel (`getPosAndDirectionAtDistance`),
+a position off to the side of the spline (`getOffsetPosAtDistance`), or many lookups at once written into
+lists you keep (`getPosAtDistances`).
 
 ### Hints
 
@@ -90,8 +98,8 @@ end)
 
 Inputs accept `Vector3` or `vector`, and outputs are `vector`. On Roblox the two are the same value, but the
 type checker treats them as different types, so outputs may need a cast where a `Vector3` is expected."><link data-rh="true" rel="canonical" href="https://gigahd.github.io/Splynx/api/Splynx"><link data-rh="true" rel="alternate" href="https://gigahd.github.io/Splynx/api/Splynx" hreflang="en"><link data-rh="true" rel="alternate" href="https://gigahd.github.io/Splynx/api/Splynx" hreflang="x-default"><link rel="stylesheet" href="/Splynx/assets/css/styles.e8e96400.css">
-<script src="/Splynx/assets/js/runtime~main.ff417e75.js" defer="defer"></script>
-<script src="/Splynx/assets/js/main.811f6696.js" defer="defer"></script>
+<script src="/Splynx/assets/js/runtime~main.817a5544.js" defer="defer"></script>
+<script src="/Splynx/assets/js/main.1d5ee8fc.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -117,14 +125,14 @@ type checker treats them as different types, so outputs may need a cast where a 
     </tr>
     <tr>
       <td><a href="/Splynx/api/CubicSpline">CubicSpline</a></td>
-      <td><a href="/Splynx/api/Splynx#bezier">Splynx.bezier</a>, <a href="/Splynx/api/Splynx#hermite">Splynx.hermite</a>, <a href="/Splynx/api/Splynx#cardinal">Splynx.cardinal</a>, <a href="/Splynx/api/Splynx#catmullRom">Splynx.catmullRom</a>, <a href="/Splynx/api/Splynx#bSpline">Splynx.bSpline</a></td>
+      <td><a href="/Splynx/api/Splynx#bezier">Splynx.bezier</a>, <a href="/Splynx/api/Splynx#hermite">Splynx.hermite</a>, <a href="/Splynx/api/Splynx#cardinal">Splynx.cardinal</a>, <a href="/Splynx/api/Splynx#catmullRom">Splynx.catmullRom</a>, <a href="/Splynx/api/Splynx#bSpline">Splynx.bSpline</a>, <a href="/Splynx/api/Splynx#rounded">Splynx.rounded</a>, <a href="/Splynx/api/Splynx#filleted">Splynx.filleted</a></td>
       <td>Smooth curves</td>
       <td>Yes</td>
     </tr>
     <tr>
       <td><a href="/Splynx/api/SampledSpline">SampledSpline</a></td>
       <td><a href="/Splynx/api/Splynx#sampled">Splynx.sampled</a></td>
-      <td>Straight segments a fixed distance apart along another spline</td>
+      <td>Straight segments between samples along another spline</td>
       <td>No</td>
     </tr>
   </tbody>
@@ -143,6 +151,11 @@ type checker treats them as different types, so outputs may need a cast where a 
   <code>getPos(alpha)</code> splits alpha evenly across a spline's curves, so it speeds up and slows down along curves of
   different lengths. For a constant speed, work in distances: <code>getPosAtDistance</code>, <code>getUniformPos</code> and
   <code>sampleUniform</code>.
+</p>
+<p>
+  Every distance lookup has variants that also give the direction of travel (<code>getPosAndDirectionAtDistance</code>),
+  a position off to the side of the spline (<code>getOffsetPosAtDistance</code>), or many lookups at once written into
+  lists you keep (<code>getPosAtDistances</code>).
 </p>
 <h3>Hints</h3>
 <p>
@@ -165,17 +178,17 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
   Inputs accept <code>Vector3</code> or <code>vector</code>, and outputs are <code>vector</code>. On Roblox the two are the same value, but the
   type checker treats them as different types, so outputs may need a cast where a <code>Vector3</code> is expected.
 </p>
-</div></header><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="types">Types<a href="#types" class="hash-link" aria-label="Direct link to Types" title="Direct link to Types" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="VectorLike"><code style="text-decoration:none">VectorLike</code><a href="#VectorLike" class="hash-link" aria-label="Direct link to VectorLike" title="Direct link to VectorLike" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L68"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>VectorLike<!-- --> = </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/Vector3" target="_blank" rel="noopener noreferrer">Vector3<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code class="op_lSLc"> | </code><code class="blue_P4bS">vector</code></div><div>
+</div></header><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="types">Types<a href="#types" class="hash-link" aria-label="Direct link to Types" title="Direct link to Types" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="VectorLike"><code style="text-decoration:none">VectorLike</code><a href="#VectorLike" class="hash-link" aria-label="Direct link to VectorLike" title="Direct link to VectorLike" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L73"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>VectorLike<!-- --> = </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/Vector3" target="_blank" rel="noopener noreferrer">Vector3<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code class="op_lSLc"> | </code><code class="blue_P4bS">vector</code></div><div>
 <p>Anything Splynx accepts as a position or velocity.</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Spline"><code style="text-decoration:none">Spline</code><a href="#Spline" class="hash-link" aria-label="Direct link to Spline" title="Direct link to Spline" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L78"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>Spline<!-- --> = </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/LinearSpline">LinearSpline</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/SampledSpline">SampledSpline</a></code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Spline"><code style="text-decoration:none">Spline</code><a href="#Spline" class="hash-link" aria-label="Direct link to Spline" title="Direct link to Spline" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L84"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>Spline<!-- --> = </code> <code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/LinearSpline">LinearSpline</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/SampledSpline">SampledSpline</a></code></div><div>
 <p>Any spline.</p>
-</div><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="linear"><code style="text-decoration:none">linear</code><a href="#linear" class="hash-link" aria-label="Direct link to linear" title="Direct link to linear" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L90"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">linear</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="linear"><code style="text-decoration:none">linear</code><a href="#linear" class="hash-link" aria-label="Direct link to linear" title="Direct link to linear" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L96"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">linear</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>Relative to the pivot.</p>
 </span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
 <p>Defaults to the origin.</p>
 </span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/LinearSpline">LinearSpline</a></code></div><div>
 <p>Straight segments between the points. Needs at least two points to make a segment.</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="bezier"><code style="text-decoration:none">bezier</code><a href="#bezier" class="hash-link" aria-label="Direct link to bezier" title="Direct link to bezier" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L103"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">bezier</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="bezier"><code style="text-decoration:none">bezier</code><a href="#bezier" class="hash-link" aria-label="Direct link to bezier" title="Direct link to bezier" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L109"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">bezier</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>Relative to the pivot.</p>
 </span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
 <p>Defaults to the origin.</p>
@@ -184,7 +197,7 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
   Cubic Bezier curves: points 1-4 make the first curve, 4-7 the second, and so on, so it passes through every
   third point. Points past the last complete curve are kept but ignored.
 </p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="hermite"><code style="text-decoration:none">hermite</code><a href="#hermite" class="hash-link" aria-label="Direct link to hermite" title="Direct link to hermite" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L117"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">hermite</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="hermite"><code style="text-decoration:none">hermite</code><a href="#hermite" class="hash-link" aria-label="Direct link to hermite" title="Direct link to hermite" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L123"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">hermite</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>Relative to the pivot.</p>
 </span></span></div><div><code>velocities<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>One per point. Missing ones are zero.</p>
@@ -195,7 +208,7 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
   Passes through every point, leaving each one with its velocity. Change velocities with
   <a href="/Splynx/api/CubicSpline#setVelocity">CubicSpline:setVelocity</a>.
 </p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cardinal"><code style="text-decoration:none">cardinal</code><a href="#cardinal" class="hash-link" aria-label="Direct link to cardinal" title="Direct link to cardinal" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L131"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">cardinal</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="cardinal"><code style="text-decoration:none">cardinal</code><a href="#cardinal" class="hash-link" aria-label="Direct link to cardinal" title="Direct link to cardinal" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L137"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">cardinal</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>Relative to the pivot.</p>
 </span></span></div><div><code>scale<!-- -->: </code><code class="blue_P4bS">number</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>How strongly the curve follows its neighbours; 0.5 is Catmull-Rom.</p>
@@ -206,13 +219,13 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
   Passes through every point, with velocities of <code>(next - previous) * scale</code>. The end points mirror their only
   neighbour. Change the scale with <a href="/Splynx/api/CubicSpline#setScale">CubicSpline:setScale</a>.
 </p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="catmullRom"><code style="text-decoration:none">catmullRom</code><a href="#catmullRom" class="hash-link" aria-label="Direct link to catmullRom" title="Direct link to catmullRom" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L143"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">catmullRom</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="catmullRom"><code style="text-decoration:none">catmullRom</code><a href="#catmullRom" class="hash-link" aria-label="Direct link to catmullRom" title="Direct link to catmullRom" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L149"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">catmullRom</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>Relative to the pivot.</p>
 </span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
 <p>Defaults to the origin.</p>
 </span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code></div><div>
 <p>A <a href="/Splynx/api/Splynx#cardinal">Splynx.cardinal</a> spline with a scale of 0.5: passes through every point with natural-looking curves.</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="bSpline"><code style="text-decoration:none">bSpline</code><a href="#bSpline" class="hash-link" aria-label="Direct link to bSpline" title="Direct link to bSpline" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L156"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">bSpline</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="bSpline"><code style="text-decoration:none">bSpline</code><a href="#bSpline" class="hash-link" aria-label="Direct link to bSpline" title="Direct link to bSpline" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L162"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">bSpline</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>Relative to the pivot.</p>
 </span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
 <p>Defaults to the origin.</p>
@@ -221,15 +234,65 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
   A uniform cubic B-spline: smooth everywhere, including across joints, but it only passes near its points.
   Needs at least four points.
 </p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="sampled"><code style="text-decoration:none">sampled</code><a href="#sampled" class="hash-link" aria-label="Direct link to sampled" title="Direct link to sampled" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L172"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">sampled</code><code>(</code><div class="inset_uKQm"><div><code>source<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/LinearSpline">LinearSpline</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="rounded"><code style="text-decoration:none">rounded</code><a href="#rounded" class="hash-link" aria-label="Direct link to rounded" title="Direct link to rounded" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L194"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">rounded</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>Relative to the pivot.</p>
+</span></span></div><div><code>reach<!-- -->: </code><code class="blue_P4bS">number</code><code class="op_lSLc"> | </code><code class="purple_ieR2">{</code><code class="blue_P4bS">number</code><code class="purple_ieR2">}</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>How far either side of every corner the rounding starts and ends, or one per point. Missing ones are 0.</p>
+</span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
+<p>Defaults to the origin.</p>
+</span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code></div><div>
+<p>
+  Straight lines between the points, with the corner at each point rounded off by a circular arc. The arc starts
+  <code>reach</code> studs before the corner and ends <code>reach</code> studs after it, whatever the angle, so sharper turns get
+  tighter arcs. Unlike <a href="/Splynx/api/Splynx#catmullRom">Splynx.catmullRom</a>, the straight parts stay straight, so it suits paths laid out from
+  waypoints. The ends and corners with a reach of 0 stay sharp. For arcs of a set radius instead, use
+  <a href="/Splynx/api/Splynx#filleted">Splynx.filleted</a>.
+</p>
+<p>
+  Where the arcs at both ends of a line would need more of it than there is, both shrink in proportion until
+  they meet, so a reach is the most a corner gets. A path that doubles back on itself turns sharply. Arcs are
+  cubic approximations, within about 0.03% of their radius for a right angle.
+</p>
+<p>
+  Its curves alternate between lines and arcs, starting and ending with a line. Change reaches with
+  <a href="/Splynx/api/CubicSpline#setRadius">CubicSpline:setRadius</a>.
+</p>
+<pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> path <span class="token operator">=</span> Splynx<span class="token punctuation">.</span><span class="token function">rounded</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+    Vector3<span class="token punctuation">.</span><span class="token function">new</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    Vector3<span class="token punctuation">.</span><span class="token function">new</span><span class="token punctuation">(</span><span class="token number">40</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    Vector3<span class="token punctuation">.</span><span class="token function">new</span><span class="token punctuation">(</span><span class="token number">40</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">30</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span>
+</code></pre>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="filleted"><code style="text-decoration:none">filleted</code><a href="#filleted" class="hash-link" aria-label="Direct link to filleted" title="Direct link to filleted" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L210"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">filleted</code><code>(</code><div class="inset_uKQm"><div><code>points<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike</a></code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>Relative to the pivot.</p>
+</span></span></div><div><code>radius<!-- -->: </code><code class="blue_P4bS">number</code><code class="op_lSLc"> | </code><code class="purple_ieR2">{</code><code class="blue_P4bS">number</code><code class="purple_ieR2">}</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>The arc radius of every corner, or one per point. Missing ones are 0.</p>
+</span></span></div><div><code>pivot<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/Splynx#VectorLike">VectorLike?</a></code><span class="inlineDescription_G7Er">-- <span>
+<p>Defaults to the origin.</p>
+</span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code></div><div>
+<p>
+  Like <a href="/Splynx/api/Splynx#rounded">Splynx.rounded</a>, but each corner is an arc of <code>radius</code>. An arc of the same radius needs more room the
+  sharper the turn: it starts <code>radius * tan(turn / 2)</code> studs before the corner, the radius at a right angle and
+  about 3.7 times it at a 150 degree turn. Where there isn't that much room, the arc shrinks to fit, which also
+  shrinks its radius.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="sampled"><code style="text-decoration:none">sampled</code><a href="#sampled" class="hash-link" aria-label="Direct link to sampled" title="Direct link to sampled" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/gigahd/Splynx/blob/master/src/init.luau#L232"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Splynx<!-- -->.</code><code class="green_DgR4">sampled</code><code>(</code><div class="inset_uKQm"><div><code>source<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/LinearSpline">LinearSpline</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/CubicSpline">CubicSpline</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>The spline to copy.</p>
-</span></span></div><div><code>spacing<!-- -->: </code><code class="blue_P4bS">number</code><span class="inlineDescription_G7Er">-- <span>
+</span></span></div><div><code>spacing<!-- -->: </code><code class="blue_P4bS">number</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>Studs between samples, along the spline.</p>
+</span></span></div><div><code>keepJoints<!-- -->: </code><code class="blue_P4bS">boolean?</code><span class="inlineDescription_G7Er">-- <span>
+<p>Put a sample on every joint, so sharp corners stay sharp.</p>
 </span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/Splynx/api/SampledSpline">SampledSpline</a></code></div><div>
 <p>
   A static copy of <code>source</code> as straight segments <code>spacing</code> studs apart along it, for the fastest distance
   lookups. Smaller spacing follows curves more closely. It doesn't follow later edits to <code>source</code>; sample it
   again after changing it.
+</p>
+<p>
+  Samples that land either side of a sharp corner cut across it. With <code>keepJoints</code>, every joint (see
+  <code>getJoints</code>) gets a sample, and each curve is split into equal segments no longer than <code>spacing</code>, so a
+  linear spline's corners and a rounded spline's straight lines come out exact. Lookups cost the same either
+  way.
 </p>
 </div><h3>Errors</h3><table class="errorTable_jfN8"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;Spacing must be more than 0&quot;</td><td>If `spacing` isn&#x27;t positive.</td></tr><tr><td>&quot;Spline doesn&#x27;t have enough points to make a curve&quot;</td><td>If `source` has no curves.</td></tr></tbody></table></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [
@@ -256,7 +319,7 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 90,
+                &quot;line&quot;: 96,
                 &quot;path&quot;: &quot;src/init.luau&quot;
             }
         },
@@ -283,7 +346,7 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 103,
+                &quot;line&quot;: 109,
                 &quot;path&quot;: &quot;src/init.luau&quot;
             }
         },
@@ -315,7 +378,7 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 117,
+                &quot;line&quot;: 123,
                 &quot;path&quot;: &quot;src/init.luau&quot;
             }
         },
@@ -347,7 +410,7 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 131,
+                &quot;line&quot;: 137,
                 &quot;path&quot;: &quot;src/init.luau&quot;
             }
         },
@@ -374,7 +437,7 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 143,
+                &quot;line&quot;: 149,
                 &quot;path&quot;: &quot;src/init.luau&quot;
             }
         },
@@ -401,13 +464,77 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 156,
+                &quot;line&quot;: 162,
+                &quot;path&quot;: &quot;src/init.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;rounded&quot;,
+            &quot;desc&quot;: &quot;Straight lines between the points, with the corner at each point rounded off by a circular arc. The arc starts\n`reach` studs before the corner and ends `reach` studs after it, whatever the angle, so sharper turns get\ntighter arcs. Unlike [Splynx.catmullRom], the straight parts stay straight, so it suits paths laid out from\nwaypoints. The ends and corners with a reach of 0 stay sharp. For arcs of a set radius instead, use\n[Splynx.filleted].\n\nWhere the arcs at both ends of a line would need more of it than there is, both shrink in proportion until\nthey meet, so a reach is the most a corner gets. A path that doubles back on itself turns sharply. Arcs are\ncubic approximations, within about 0.03% of their radius for a right angle.\n\nIts curves alternate between lines and arcs, starting and ending with a line. Change reaches with\n[CubicSpline:setRadius].\n\n```lua\nlocal path = Splynx.rounded({\n    Vector3.new(0, 0, 0),\n    Vector3.new(40, 0, 0),\n    Vector3.new(40, 0, 30),\n}, 2)\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;points&quot;,
+                    &quot;desc&quot;: &quot;Relative to the pivot.&quot;,
+                    &quot;lua_type&quot;: &quot;{VectorLike}?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;reach&quot;,
+                    &quot;desc&quot;: &quot;How far either side of every corner the rounding starts and ends, or one per point. Missing ones are 0.&quot;,
+                    &quot;lua_type&quot;: &quot;number | {number}&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;pivot&quot;,
+                    &quot;desc&quot;: &quot;Defaults to the origin.&quot;,
+                    &quot;lua_type&quot;: &quot;VectorLike?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CubicSpline&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 194,
+                &quot;path&quot;: &quot;src/init.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;filleted&quot;,
+            &quot;desc&quot;: &quot;Like [Splynx.rounded], but each corner is an arc of `radius`. An arc of the same radius needs more room the\nsharper the turn: it starts `radius * tan(turn / 2)` studs before the corner, the radius at a right angle and\nabout 3.7 times it at a 150 degree turn. Where there isn&#x27;t that much room, the arc shrinks to fit, which also\nshrinks its radius.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;points&quot;,
+                    &quot;desc&quot;: &quot;Relative to the pivot.&quot;,
+                    &quot;lua_type&quot;: &quot;{VectorLike}?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;radius&quot;,
+                    &quot;desc&quot;: &quot;The arc radius of every corner, or one per point. Missing ones are 0.&quot;,
+                    &quot;lua_type&quot;: &quot;number | {number}&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;pivot&quot;,
+                    &quot;desc&quot;: &quot;Defaults to the origin.&quot;,
+                    &quot;lua_type&quot;: &quot;VectorLike?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CubicSpline&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 210,
                 &quot;path&quot;: &quot;src/init.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;sampled&quot;,
-            &quot;desc&quot;: &quot;A static copy of `source` as straight segments `spacing` studs apart along it, for the fastest distance\nlookups. Smaller spacing follows curves more closely. It doesn&#x27;t follow later edits to `source`; sample it\nagain after changing it.&quot;,
+            &quot;desc&quot;: &quot;A static copy of `source` as straight segments `spacing` studs apart along it, for the fastest distance\nlookups. Smaller spacing follows curves more closely. It doesn&#x27;t follow later edits to `source`; sample it\nagain after changing it.\n\nSamples that land either side of a sharp corner cut across it. With `keepJoints`, every joint (see\n`getJoints`) gets a sample, and each curve is split into equal segments no longer than `spacing`, so a\nlinear spline&#x27;s corners and a rounded spline&#x27;s straight lines come out exact. Lookups cost the same either\nway.&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;source&quot;,
@@ -418,6 +545,11 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
                     &quot;name&quot;: &quot;spacing&quot;,
                     &quot;desc&quot;: &quot;Studs between samples, along the spline.&quot;,
                     &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;keepJoints&quot;,
+                    &quot;desc&quot;: &quot;Put a sample on every joint, so sharp corners stay sharp.&quot;,
+                    &quot;lua_type&quot;: &quot;boolean?&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -438,7 +570,7 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 172,
+                &quot;line&quot;: 232,
                 &quot;path&quot;: &quot;src/init.luau&quot;
             }
         }
@@ -450,7 +582,7 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
             &quot;desc&quot;: &quot;Anything Splynx accepts as a position or velocity.&quot;,
             &quot;lua_type&quot;: &quot;Vector3 | vector&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 68,
+                &quot;line&quot;: 73,
                 &quot;path&quot;: &quot;src/init.luau&quot;
             }
         },
@@ -459,17 +591,17 @@ RunService<span class="token punctuation">.</span>Heartbeat<span class="token pu
             &quot;desc&quot;: &quot;Any spline.&quot;,
             &quot;lua_type&quot;: &quot;LinearSpline | CubicSpline | SampledSpline&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 78,
+                &quot;line&quot;: 84,
                 &quot;path&quot;: &quot;src/init.luau&quot;
             }
         }
     ],
     &quot;name&quot;: &quot;Splynx&quot;,
-    &quot;desc&quot;: &quot;Splines built for fast lookups. There are three kinds:\n\n| Kind | Made by | Shape | Editable |\n| --- | --- | --- | --- |\n| [LinearSpline] | [Splynx.linear] | Straight segments between the points | Yes |\n| [CubicSpline] | [Splynx.bezier], [Splynx.hermite], [Splynx.cardinal], [Splynx.catmullRom], [Splynx.bSpline] | Smooth curves | Yes |\n| [SampledSpline] | [Splynx.sampled] | Straight segments a fixed distance apart along another spline | No |\n\nLookups are prioritised over edits: everything that speeds up a lookup is precomputed, and rebuilt when the\nspline changes. Run `lune run bench` for current numbers.\n\n### Points and the pivot\n\nPoints are relative to the spline&#x27;s pivot, and every position a spline returns has the pivot applied. Moving\nthe pivot moves the whole spline without rebuilding anything.\n\n### Alpha and distance\n\n`getPos(alpha)` splits alpha evenly across a spline&#x27;s curves, so it speeds up and slows down along curves of\ndifferent lengths. For a constant speed, work in distances: `getPosAtDistance`, `getUniformPos` and\n`sampleUniform`.\n\n### Hints\n\nDistance lookups take an optional hint and return a new one. Passing back the previous call&#x27;s hint starts the\nnext lookup where the last one ended, which makes lookups for something moving along the spline cheaper. Any\nhint gives the same result, so a stale one is fine; leave it out for lookups that jump around.\n\n```lua\nlocal spline = Splynx.catmullRom({ Vector3.new(0, 0, 0), Vector3.new(10, 5, 0), Vector3.new(20, 0, 0) })\n\nlocal distance, hint = 0, nil\nRunService.Heartbeat:Connect(function(deltaTime)\n    distance = (distance + 12 * deltaTime) % spline:getLength()\n    local position\n    position, hint = spline:getPosAtDistance(distance, hint)\n    part.Position = position\nend)\n```\n\n### Vectors\n\nInputs accept `Vector3` or `vector`, and outputs are `vector`. On Roblox the two are the same value, but the\ntype checker treats them as different types, so outputs may need a cast where a `Vector3` is expected.&quot;,
+    &quot;desc&quot;: &quot;Splines built for fast lookups. There are three kinds:\n\n| Kind | Made by | Shape | Editable |\n| --- | --- | --- | --- |\n| [LinearSpline] | [Splynx.linear] | Straight segments between the points | Yes |\n| [CubicSpline] | [Splynx.bezier], [Splynx.hermite], [Splynx.cardinal], [Splynx.catmullRom], [Splynx.bSpline], [Splynx.rounded], [Splynx.filleted] | Smooth curves | Yes |\n| [SampledSpline] | [Splynx.sampled] | Straight segments between samples along another spline | No |\n\nLookups are prioritised over edits: everything that speeds up a lookup is precomputed, and rebuilt when the\nspline changes. Run `lune run bench` for current numbers.\n\n### Points and the pivot\n\nPoints are relative to the spline&#x27;s pivot, and every position a spline returns has the pivot applied. Moving\nthe pivot moves the whole spline without rebuilding anything.\n\n### Alpha and distance\n\n`getPos(alpha)` splits alpha evenly across a spline&#x27;s curves, so it speeds up and slows down along curves of\ndifferent lengths. For a constant speed, work in distances: `getPosAtDistance`, `getUniformPos` and\n`sampleUniform`.\n\nEvery distance lookup has variants that also give the direction of travel (`getPosAndDirectionAtDistance`),\na position off to the side of the spline (`getOffsetPosAtDistance`), or many lookups at once written into\nlists you keep (`getPosAtDistances`).\n\n### Hints\n\nDistance lookups take an optional hint and return a new one. Passing back the previous call&#x27;s hint starts the\nnext lookup where the last one ended, which makes lookups for something moving along the spline cheaper. Any\nhint gives the same result, so a stale one is fine; leave it out for lookups that jump around.\n\n```lua\nlocal spline = Splynx.catmullRom({ Vector3.new(0, 0, 0), Vector3.new(10, 5, 0), Vector3.new(20, 0, 0) })\n\nlocal distance, hint = 0, nil\nRunService.Heartbeat:Connect(function(deltaTime)\n    distance = (distance + 12 * deltaTime) % spline:getLength()\n    local position\n    position, hint = spline:getPosAtDistance(distance, hint)\n    part.Position = position\nend)\n```\n\n### Vectors\n\nInputs accept `Vector3` or `vector`, and outputs are `vector`. On Roblox the two are the same value, but the\ntype checker treats them as different types, so outputs may need a cast where a `Vector3` is expected.&quot;,
     &quot;source&quot;: {
-        &quot;line&quot;: 52,
+        &quot;line&quot;: 56,
         &quot;path&quot;: &quot;src/init.luau&quot;
     }
-}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#Spline" class="table-of-contents__link toc-highlight">Spline</a></li><li><a href="#VectorLike" class="table-of-contents__link toc-highlight">VectorLike</a></li></ul></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#bezier" class="table-of-contents__link toc-highlight">.bezier</a></li><li><a href="#bSpline" class="table-of-contents__link toc-highlight">.bSpline</a></li><li><a href="#cardinal" class="table-of-contents__link toc-highlight">.cardinal</a></li><li><a href="#catmullRom" class="table-of-contents__link toc-highlight">.catmullRom</a></li><li><a href="#hermite" class="table-of-contents__link toc-highlight">.hermite</a></li><li><a href="#linear" class="table-of-contents__link toc-highlight">.linear</a></li><li><a href="#sampled" class="table-of-contents__link toc-highlight">.sampled</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 gigahd. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#Spline" class="table-of-contents__link toc-highlight">Spline</a></li><li><a href="#VectorLike" class="table-of-contents__link toc-highlight">VectorLike</a></li></ul></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#bezier" class="table-of-contents__link toc-highlight">.bezier</a></li><li><a href="#bSpline" class="table-of-contents__link toc-highlight">.bSpline</a></li><li><a href="#cardinal" class="table-of-contents__link toc-highlight">.cardinal</a></li><li><a href="#catmullRom" class="table-of-contents__link toc-highlight">.catmullRom</a></li><li><a href="#filleted" class="table-of-contents__link toc-highlight">.filleted</a></li><li><a href="#hermite" class="table-of-contents__link toc-highlight">.hermite</a></li><li><a href="#linear" class="table-of-contents__link toc-highlight">.linear</a></li><li><a href="#rounded" class="table-of-contents__link toc-highlight">.rounded</a></li><li><a href="#sampled" class="table-of-contents__link toc-highlight">.sampled</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 gigahd. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
 </body>
 </html>
